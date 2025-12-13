@@ -40,3 +40,29 @@ jobs:
       - name: Run Semgrep SAST scan
         run: |
           semgrep --config p/security-audit --json . || true
+
+      - name: Create Docker network
+        run: |
+          docker network create zap-network
+
+      - name: Start application
+        run: |
+          docker run -d --network zap-network --name myapp -p 8080:8080 myapp:latest
+          sleep 15
+          docker ps
+          docker logs myapp || true
+
+      - name: Wait for application to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8080; do sleep 2; done' || true
+
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          docker run --rm --network zap-network -v ${{ github.workspace }}:/zap/wrk/:rw -i zaproxy/zap-stable zap-baseline.py -t http://myapp:8080 -r zap_report.html || true
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: zap-report
+          path: zap_report.html
