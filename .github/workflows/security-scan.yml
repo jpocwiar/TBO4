@@ -62,7 +62,7 @@ jobs:
 
       - name: Run OWASP ZAP Baseline Scan
         run: |
-          docker run --rm --network zap-network -v ${{ github.workspace }}:/zap/wrk/:rw -u zap zaproxy/zap-stable zap-baseline.py -t http://myapp:8080 -r /zap/wrk/zap_report.html || true
+          docker run --rm --network zap-network -v ${{ github.workspace }}:/zap/wrk/:rw -w /zap/wrk -u zap zaproxy/zap-stable zap-baseline.py -t http://myapp:8080 -r zap_report.html || true
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4
